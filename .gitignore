@@ -1,0 +1,6 @@
+# Variables de entorno, carpetas y más
+.venv
+__pycache__
+
+credentials.json
+*.pickle
