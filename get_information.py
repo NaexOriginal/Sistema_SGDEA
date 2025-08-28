@@ -3,9 +3,9 @@ import time
 import email
 import pickle
 import imaplib
-import datetime
 from dotenv import load_dotenv
 from email.header import decode_header
+from spacy_nlp import extraer_entidades
 from get_documents import extraer_texto_archivo
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -127,6 +127,11 @@ def obtener_contenido_correo(mail, email_id):
   print("\nTexto Extraído (cuerpo del correo + adjuntos)")
   print(texto_total)
   
+  info_clave = extraer_entidades(texto_total)
+  
+  print("\n--- Información Clave Extraida ---")
+  print(info_clave)
+  
   return {
     "remitente": remitente,
     "asunto": asunto,
@@ -135,52 +140,49 @@ def obtener_contenido_correo(mail, email_id):
   }  
   
 #* Flujo principal del Script
-if __name__ == "__main__":
-  mail = None
+# if __name__ == "__main__":
+#   mail = None
   
-  try:
-    mail = conectar_servidor()
-    mail.select("INBOX")
-    print("Esperando nuvos correos... (Presiona Ctrl+C para salir)")
+#   try:
+#     mail = conectar_servidor()
+#     mail.select("INBOX")
+#     print("Esperando nuvos correos... (Presiona Ctrl+C para salir)")
     
-    while True:
-      #* Establecemos el rango de fecha
-      fecha_semana = (datetime.date.today() - datetime.timedelta(days=7)).strftime("%d-%b-%Y")
-      
-      resp, items = mail.search(None, 'UNSEEN', 'SINCE 20-Aug-2025', 'X-GM-RAW "Category:Primary"')
-      email_ids = items[0].split()
+#     while True:  
+#       resp, items = mail.search(None, 'ALL', 'SINCE 20-Aug-2025', 'X-GM-RAW "Category:Primary"')
+#       email_ids = items[0].split()
         
-      if email_ids:
-        #* Procesar solo el último correo no leido
-        latest_email_id = email_ids[-1]
-        print("Nuevo correo detectado") 
+#       if email_ids:
+#         #* Procesar solo el último correo no leido
+#         latest_email_id = email_ids[-1]
+#         print("Nuevo correo detectado") 
         
-        datos_correo = obtener_contenido_correo(mail, latest_email_id)    
-        print("-" * 50)
+#         datos_correo = obtener_contenido_correo(mail, latest_email_id)    
+#         print("-" * 50)
         
-        #* Opcional: Marcar el correo como leído para no procesarlo de nuevo
-        mail.store(latest_email_id, '+FLAGS', r'\Seen')
+#         #* Opcional: Marcar el correo como leído para no procesarlo de nuevo
+#         mail.store(latest_email_id, '+FLAGS', r'\Seen')
           
-      else:
-        print("No se encontraron correos nuevos. Esperando...")
+#       else:
+#         print("No se encontraron correos nuevos. Esperando...")
         
-      #* Esperamos 30 segundos antes de volver a revisar
-      time.sleep(30)
+#       #* Esperamos 30 segundos antes de volver a revisar
+#       time.sleep(30)
       
-  except (imaplib.IMAP4.abort, imaplib.IMAP4.error) as e:
-    print(f"Error de conexión IMAP: {e}. \n\nReconectando...")
+#   except (imaplib.IMAP4.abort, imaplib.IMAP4.error) as e:
+#     print(f"Error de conexión IMAP: {e}. \n\nReconectando...")
     
-    #* Lógica para reconectar si la conexión se íerde
-    if mail:
-      mail.close()
-      mail.logout()
+#     #* Lógica para reconectar si la conexión se íerde
+#     if mail:
+#       mail.close()
+#       mail.logout()
       
-    time.sleep(30) 
+#     time.sleep(30) 
     
-  except KeyboardInterrupt:
-    print("Proceso terminado por el usuario")  
+#   except KeyboardInterrupt:
+#     print("Proceso terminado por el usuario")  
   
-  finally:
-    if mail:
-      mail.close()
-      mail.logout()
+#   finally:
+#     if mail:
+#       mail.close()
+#       mail.logout()

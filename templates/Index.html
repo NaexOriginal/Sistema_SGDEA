@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Monitor de Correos</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+  </head>
+  
+  <body>
+    <div class="container">
+      <h1>Monitor de Correos</h1>
+      <p>
+        Presiona el botón para buscar nuevos correos en la bandeja principal.
+      </p>
+      <button id="checkEmailBtn">Revisar Correos</button>
+      <div id="loading" class="hidden">Cargando...</div>
+      <div id="responseContainer" class="hidden">
+        <h2>Resultado:</h2>
+        <pre id="responseJson"></pre>
+      </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  </body>
+</html>

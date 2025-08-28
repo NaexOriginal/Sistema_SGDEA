@@ -5,3 +5,6 @@ google-auth-oauthlib
 PyMuPDF
 python-docx
 pytesseract
+spacy
+Flask
+requests
