@@ -56,3 +56,21 @@ button:hover {
     white-space: pre-wrap;
     word-wrap: break-word;
 }
+
+.form-group {
+    margin-bottom: 1em;
+    text-align: left;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5em;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px;
+    box-sizing: border-box;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}

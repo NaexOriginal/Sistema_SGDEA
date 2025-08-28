@@ -1,9 +1,19 @@
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, request
 from get_information import conectar_servidor, obtener_contenido_correo
+from get_documents import extraer_texto_archivo
+from werkzeug.utils import secure_filename
 import imaplib
 import datetime
+import os
 
 app = Flask(__name__)
+
+#* Directorio donde se guardan los archivos
+UPLOAD_FOLDER = 'uploads'
+if not os.path.exists(UPLOAD_FOLDER):
+  os.makedirs(UPLOAD_FOLDER)
+  
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 #* Definimos una variable global para la conexión IMAP
 mail = None
@@ -62,6 +72,50 @@ def revisar_correo():
       "message": f"Ha ocurrido un error inesperado: {str(e)}"
     })
     
+@app.route('/procesar_formulario', methods=['POST'])
+def procesar_formulario():
+  #* 1. Obtenemos la información del formulario
+  asunto = request.form.get('asunto', '')
+  cuerpo_mensaje = request.form.get('cuerpo_mensaje', '')
+  
+  #* 2. Manejar los archivos adjuntos
+  adjuntos_texto = ""
+  adjuntos_detectados = []
+  
+  if 'adjuntos' in request.files:
+    archivos = request.files.getlist('adjuntos')
+    for archivo in archivos:
+      if archivo.filename != '':
+        #* Usar secure_filename para evitar problemas de seguridad
+        filename = secure_filename(archivo.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        archivo.save(filepath)
+        
+        #* Leer el archivo y procesarlo con la función
+        with open(filepath, 'rb') as f:
+          file_data = f.read()
+          
+        adjuntos_detectados.append(filename)
+        adjuntos_texto += extraer_texto_archivo(filename, file_data)
+        
+        #* Opcional: Eliminar el archivo después de procesarlo
+        os.remove(filepath)
+        
+  #* 3. Combinar todo el texto para el procesamiento NLP
+  texto_total = cuerpo_mensaje + "\n\n" + adjuntos_texto
+  
+  #* Aquí puedes llamar a tu función de NLP para extraer la información
+  from spacy_nlp import extraer_entidades
+  info_clave = extraer_entidades(texto_total)
+
+  #* 4. Devolver una respuesta JSON con el resultado
+  return jsonify({
+    "status": "success",
+    "cuerpo": cuerpo_mensaje,
+    "adjuntos_detectados": adjuntos_detectados,
+    "texto_extraido": texto_total,
+    "informacion_clave": info_clave
+  })
 
 if __name__ == '__main__':
   app.run(debug=True)

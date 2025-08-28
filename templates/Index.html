@@ -3,13 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Monitor de Correos</title>
+    <title>Monitor de Correos y Formularios</title>
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/style.css') }}"
     />
   </head>
-  
   <body>
     <div class="container">
       <h1>Monitor de Correos</h1>
@@ -17,6 +16,35 @@
         Presiona el botón para buscar nuevos correos en la bandeja principal.
       </p>
       <button id="checkEmailBtn">Revisar Correos</button>
+      <hr />
+
+      <h2>Procesar un Formulario</h2>
+      <form id="uploadForm">
+        <div class="form-group">
+          <label for="asunto">Asunto:</label>
+          <input type="text" id="asunto" name="asunto" class="form-control" />
+        </div>
+        <div class="form-group">
+          <label for="cuerpo_mensaje">Cuerpo del Mensaje:</label>
+          <textarea
+            id="cuerpo_mensaje"
+            name="cuerpo_mensaje"
+            class="form-control"
+          ></textarea>
+        </div>
+        <div class="form-group">
+          <label for="adjuntos">Adjuntos:</label>
+          <input
+            type="file"
+            id="adjuntos"
+            name="adjuntos"
+            multiple
+            class="form-control"
+          />
+        </div>
+        <button type="submit">Procesar Formulario</button>
+      </form>
+
       <div id="loading" class="hidden">Cargando...</div>
       <div id="responseContainer" class="hidden">
         <h2>Resultado:</h2>
