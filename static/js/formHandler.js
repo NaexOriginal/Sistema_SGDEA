@@ -22,6 +22,11 @@ document.getElementById('uploadForm').addEventListener('submit', (event) => {
     .then(data => {
         responseJson.textContent = JSON.stringify(data, null, 2);
         responseContainer.classList.remove('hidden');
+        
+        // Si el procesamiento fue exitoso, mostrar el chat
+        if (data.status === 'success' && window.chatHandler) {
+            window.chatHandler.mostrarChat();
+        }
     })
     .catch(error => {
         console.error('Error:', error);

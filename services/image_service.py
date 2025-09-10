@@ -35,10 +35,7 @@ def extraer_texto_imagen(file_data):
             custom_config = r'--oem 3 --psm 3'
             texto_extraido = pytesseract.image_to_string(image, config=custom_config)
             
-        print(f"Texto extraído de la imagen: {len(texto_extraido)} caracteres")
-        
-    except Exception as e:
-        print(f"Error al leer la imagen: {e}")
+    except Exception:
         return ""
         
     return texto_extraido

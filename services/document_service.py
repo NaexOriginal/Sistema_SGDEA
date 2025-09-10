@@ -21,8 +21,7 @@ def extraer_texto_docx(file_data):
         for para in doc.paragraphs:
             texto_extraido += para.text + "\n"
             
-    except Exception as e:
-        print(f"Error al leer el DOCX: {e}")
+    except Exception:
         return ""
         
     return texto_extraido

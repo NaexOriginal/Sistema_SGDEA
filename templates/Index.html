@@ -10,48 +10,106 @@
     />
   </head>
   <body>
-    <div class="container">
-      <h1>Monitor de Correos</h1>
-      <p>
-        Presiona el botón para buscar nuevos correos en la bandeja principal.
-      </p>
-      <button id="checkEmailBtn">Revisar Correos</button>     
-      <hr />
+    <div class="main-container">
+      <h1 class="main-title">Sistema SGDEA - Gestión de Documentos</h1>
+      
+      <div class="two-column-layout">
+        <!-- Columna Izquierda: Procesamiento y Contextos -->
+        <div class="left-column">
+          <div class="section">
+            <h2>Monitor de Correos</h2>
+            <p>Presiona el botón para buscar nuevos correos en la bandeja principal.</p>
+            <button id="checkEmailBtn">Revisar Correos</button>
+          </div>
 
-      <h2>Procesar un Formulario</h2>
-      <form id="uploadForm">
-        <div class="form-group">
-          <label for="asunto">Asunto:</label>
-          <input type="text" id="asunto" name="asunto" class="form-control" />
+          <div class="section">
+            <h2>Procesar Formulario</h2>
+            <form id="uploadForm">
+              <div class="form-group">
+                <label for="asunto">Asunto:</label>
+                <input type="text" id="asunto" name="asunto" class="form-control" />
+              </div>
+              <div class="form-group">
+                <label for="cuerpo_mensaje">Cuerpo del Mensaje:</label>
+                <textarea
+                  id="cuerpo_mensaje"
+                  name="cuerpo_mensaje"
+                  class="form-control"
+                  rows="4"
+                ></textarea>
+              </div>
+              <div class="form-group">
+                <label for="archivo">Archivo:</label>
+                <input
+                  type="file"
+                  id="archivo"
+                  name="archivo"
+                  class="form-control"
+                  required
+                />
+              </div>
+              <button type="submit">Procesar Formulario</button>
+            </form>
+
+            <div id="responseContainer" class="response-container hidden">
+              <h3>Resultado del Procesamiento:</h3>
+              <pre id="responseJson"></pre>
+            </div>
+          </div>
+
+          <div class="section">
+            <h2>Contextos Guardados</h2>
+            <p>Carga un contexto previamente procesado para continuar el chat.</p>
+            
+            <div class="context-controls">
+              <button id="toggle-context-panel" class="context-btn">Ver Contextos</button>
+              <button id="load-context-file" class="context-btn">Cargar JSON</button>
+              <input type="file" id="context-file-input" accept=".json" style="display: none;">
+            </div>
+
+            <div id="current-context-display" class="current-context-display" style="display: none;"></div>
+
+            <div id="context-panel" class="context-panel" style="display: none;">
+              <div class="context-panel-header">
+                <h4>Contextos Disponibles</h4>
+                <button id="refresh-contexts" class="refresh-btn">🔄</button>
+              </div>
+              <div id="context-list" class="context-list">
+                <p>Cargando contextos...</p>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="form-group">
-          <label for="cuerpo_mensaje">Cuerpo del Mensaje:</label>
-          <textarea
-            id="cuerpo_mensaje"
-            name="cuerpo_mensaje"
-            class="form-control"
-          ></textarea>
+
+        <!-- Columna Derecha: Chat -->
+        <div class="right-column">
+          <div class="chat-section">
+            <h2>Chat con el Documento</h2>
+            <div id="chat-status" class="chat-status">
+              <p>💡 Procesa un documento o carga un contexto para comenzar el chat</p>
+            </div>
+            
+            <div id="chatContainer" class="chat-container">
+              <div id="chatMessages" class="chat-messages"></div>
+              
+              <div class="chat-input-container">
+                <input 
+                  type="text" 
+                  id="chatInput" 
+                  placeholder="Escribe tu pregunta sobre el documento..."
+                  class="chat-input"
+                  disabled
+                />
+                <button id="sendChatBtn" class="chat-send-btn" disabled>Enviar</button>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="form-group">
-          <label for="archivo">Archivo:</label>
-          <input
-            type="file"
-            id="archivo"
-            name="archivo"
-            class="form-control"
-            required
-          />
-        </div>
-        <button type="submit">Procesar Formulario</button>
-
-
-      </form>
-
-      <div id="responseContainer" class="hidden">
-        <h2>Resultado:</h2>
-        <pre id="responseJson"></pre>
       </div>
+      
+      <div id="messages-container" class="messages-container"></div>
     </div>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/contextHandler.js') }}"></script>
   </body>
 </html>

@@ -5,7 +5,6 @@ try:
   nlp = spacy.load("es_core_news_sm")
   
 except OSError:
-  print("Descargando modelo de spaCy...")
   from spacy.cli import download
   download("es_core_news_sm")
   nlp = spacy.load("es_core_news_sm")

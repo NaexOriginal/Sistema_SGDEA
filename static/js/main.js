@@ -1,5 +1,8 @@
 // Importar y gestionar los módulos
 
+// Variable global para el chat handler
+window.chatHandler = null;
+
 // Cargar emailHandler.js
 function loadEmailHandler() {
     const script = document.createElement('script');
@@ -20,10 +23,26 @@ function loadFormHandler() {
     document.head.appendChild(script);
 }
 
+// Cargar chatHandler.js
+function loadChatHandler() {
+    const script = document.createElement('script');
+    script.src = '/static/js/chatHandler.js';
+    script.onload = function() {
+        console.log('Chat handler cargado');
+        // Inicializar el chat handler
+        if (window.ChatHandler) {
+            window.chatHandler = new window.ChatHandler();
+            window.chatHandler.init();
+        }
+    };
+    document.head.appendChild(script);
+}
+
 // Inicializar la aplicación
 function inicializar() {
     loadEmailHandler();
     loadFormHandler();
+    loadChatHandler();
     console.log('Aplicación inicializada');
 }
 
