@@ -1,55 +1,31 @@
-document.getElementById('checkEmailBtn').addEventListener('click', () => {
-    const loading = document.getElementById('loading');
-    const responseContainer = document.getElementById('responseContainer');
-    const responseJson = document.getElementById('responseJson');
+// Importar y gestionar los módulos
 
-    loading.classList.remove('hidden');
-    responseContainer.classList.add('hidden');
+// Cargar emailHandler.js
+function loadEmailHandler() {
+    const script = document.createElement('script');
+    script.src = '/static/js/emailHandler.js';
+    script.onload = function() {
+        console.log('Email handler cargado');
+    };
+    document.head.appendChild(script);
+}
 
-    fetch('/revisar_correo', { method: 'POST' })
-        .then(response => response.json())
-        .then(data => {
-            responseJson.textContent = JSON.stringify(data, null, 2);
-            responseContainer.classList.remove('hidden');
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            responseJson.textContent = `Error: ${error.message}`;
-            responseContainer.classList.remove('hidden');
-        })
-        .finally(() => {
-            loading.classList.add('hidden');
-        });
-});
+// Cargar formHandler.js
+function loadFormHandler() {
+    const script = document.createElement('script');
+    script.src = '/static/js/formHandler.js';
+    script.onload = function() {
+        console.log('Form handler cargado');
+    };
+    document.head.appendChild(script);
+}
 
-document.getElementById('uploadForm').addEventListener('submit', (event) => {
-    event.preventDefault();
+// Inicializar la aplicación
+function inicializar() {
+    loadEmailHandler();
+    loadFormHandler();
+    console.log('Aplicación inicializada');
+}
 
-    const loading = document.getElementById('loading');
-    const responseContainer = document.getElementById('responseContainer');
-    const responseJson = document.getElementById('responseJson');
-
-    loading.classList.remove('hidden');
-    responseContainer.classList.add('hidden');
-
-    const form = document.getElementById('uploadForm');
-    const formData = new FormData(form);
-
-    fetch('/procesar_formulario', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
-    .then(data => {
-        responseJson.textContent = JSON.stringify(data, null, 2);
-        responseContainer.classList.remove('hidden');
-    })
-    .catch(error => {
-        console.error('Error:', error);
-        responseJson.textContent = `Error: ${error.message}`;
-        responseContainer.classList.remove('hidden');
-    })
-    .finally(() => {
-        loading.classList.add('hidden');
-    });
-});
+// Ejecutar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', inicializar);

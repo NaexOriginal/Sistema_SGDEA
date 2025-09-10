@@ -83,8 +83,8 @@ def procesar_formulario():
   adjuntos_texto = ""
   adjuntos_detectados = []
   
-  if 'adjuntos' in request.files:
-    archivos = request.files.getlist('adjuntos')
+  if 'archivo' in request.files:
+    archivos = request.files.getlist('archivo')
     for archivo in archivos:
       if archivo.filename != '':
         #* Usar secure_filename para evitar problemas de seguridad

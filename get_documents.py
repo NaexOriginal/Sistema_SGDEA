@@ -1,40 +1,32 @@
 import os
-import io
-import fitz
-import pytesseract
-from PIL import Image
-from docx import Document
+from services.pdf_service import extraer_texto_pdf
+from services.image_service import extraer_texto_imagen, es_formato_imagen_soportado
+from services.document_service import extraer_texto_docx, es_formato_docx
 
 def extraer_texto_archivo(filename, file_data):
-  texto_extraido = ""
-  #* Extrae texto de un archivo PDF, DOCX o imagen
-  extension = os.path.splitext(filename)[1].lower()
-  
-  if extension == ".pdf":
-    try:
-      doc = fitz.open(stream = file_data, filetype="pdf")
-      for page in doc:
-        texto_extraido += page.get_text()
-      doc.close()
-      
-    except Exception as e:
-      print(f"Error al leer el PDF: {e}")
-      
-  elif extension == ".docx":
-    try:
-      doc = Document(io.BytesIO(file_data))
-      for para in doc.paragraphs:
-        texto_extraido += para.text + "\n"
+    """
+    Extrae texto de un archivo usando el servicio apropiado según su extensión.
     
-    except Exception as e:
-      print(f"Error al leer el DOCX: {e}")
-      
-  elif extension in [".png", ".jpg", "jpeg"]:
-    try:
-      image = Image.open(io.BytesIO(file_data))
-      texto_extraido = pytesseract.image_to_string(image)
-      
-    except Exception as e:
-      print(f"El error al leer la imagen: {e}")
-      
-  return texto_extraido
+    Args:
+        filename (str): Nombre del archivo
+        file_data (bytes): Datos binarios del archivo
+        
+    Returns:
+        str: Texto extraído del archivo
+    """
+    texto_extraido = ""
+    extension = os.path.splitext(filename)[1].lower()
+    
+    if extension == ".pdf":
+        texto_extraido = extraer_texto_pdf(file_data)
+        
+    elif es_formato_docx(extension):
+        texto_extraido = extraer_texto_docx(file_data)
+        
+    elif es_formato_imagen_soportado(extension):
+        texto_extraido = extraer_texto_imagen(file_data)
+        
+    else:
+        print(f"Formato de archivo no soportado: {extension}")
+        
+    return texto_extraido

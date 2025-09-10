@@ -15,7 +15,7 @@
       <p>
         Presiona el botón para buscar nuevos correos en la bandeja principal.
       </p>
-      <button id="checkEmailBtn">Revisar Correos</button>
+      <button id="checkEmailBtn">Revisar Correos</button>     
       <hr />
 
       <h2>Procesar un Formulario</h2>
@@ -33,19 +33,20 @@
           ></textarea>
         </div>
         <div class="form-group">
-          <label for="adjuntos">Adjuntos:</label>
+          <label for="archivo">Archivo:</label>
           <input
             type="file"
-            id="adjuntos"
-            name="adjuntos"
-            multiple
+            id="archivo"
+            name="archivo"
             class="form-control"
+            required
           />
         </div>
         <button type="submit">Procesar Formulario</button>
+
+
       </form>
 
-      <div id="loading" class="hidden">Cargando...</div>
       <div id="responseContainer" class="hidden">
         <h2>Resultado:</h2>
         <pre id="responseJson"></pre>
