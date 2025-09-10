@@ -1,5 +1,6 @@
 from flask import Flask, render_template, jsonify, request
 from get_information import conectar_servidor, obtener_contenido_correo
+from openai_classifier import clasificarcion_openai
 from get_documents import extraer_texto_archivo
 from werkzeug.utils import secure_filename
 import imaplib
@@ -107,6 +108,9 @@ def procesar_formulario():
   #* Aquí puedes llamar a tu función de NLP para extraer la información
   from spacy_nlp import extraer_entidades
   info_clave = extraer_entidades(texto_total)
+  
+  #* Paso extra: Usar OpenAI para la clasificación de archivos (No funciona debido a la API)
+  clasificacion_documental = clasificarcion_openai(texto_total)
 
   #* 4. Devolver una respuesta JSON con el resultado
   return jsonify({
@@ -114,7 +118,8 @@ def procesar_formulario():
     "cuerpo": cuerpo_mensaje,
     "adjuntos_detectados": adjuntos_detectados,
     "texto_extraido": texto_total,
-    "informacion_clave": info_clave
+    "informacion_clave": info_clave,
+    "clasifiacion_documental_openai": clasificacion_documental
   })
 
 if __name__ == '__main__':

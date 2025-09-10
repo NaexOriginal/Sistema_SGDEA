@@ -1,5 +1,6 @@
 # Variables de entorno, carpetas y más
 .venv
+.env
 __pycache__
 
 credentials.json
