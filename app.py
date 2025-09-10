@@ -1,10 +1,12 @@
 from flask import Flask, render_template, jsonify, request
+from mysql_conection import conectar_db, buscar_expediente, insertar_documento
 from get_information import conectar_servidor, obtener_contenido_correo
 from openai_classifier import clasificarcion_openai
 from get_documents import extraer_texto_archivo
 from werkzeug.utils import secure_filename
+from spacy_nlp import extraer_entidades
 import imaplib
-import datetime
+import json
 import os
 
 app = Flask(__name__)
@@ -87,40 +89,73 @@ def procesar_formulario():
     archivos = request.files.getlist('adjuntos')
     for archivo in archivos:
       if archivo.filename != '':
-        #* Usar secure_filename para evitar problemas de seguridad
         filename = secure_filename(archivo.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         archivo.save(filepath)
         
-        #* Leer el archivo y procesarlo con la función
         with open(filepath, 'rb') as f:
           file_data = f.read()
           
         adjuntos_detectados.append(filename)
         adjuntos_texto += extraer_texto_archivo(filename, file_data)
         
-        #* Opcional: Eliminar el archivo después de procesarlo
         os.remove(filepath)
         
   #* 3. Combinar todo el texto para el procesamiento NLP
-  texto_total = cuerpo_mensaje + "\n\n" + adjuntos_texto
+  texto_total = cuerpo_mensaje + "\n\n" + adjuntos_texto  
+  info_clave_spacy = extraer_entidades(texto_total)
   
-  #* Aquí puedes llamar a tu función de NLP para extraer la información
-  from spacy_nlp import extraer_entidades
-  info_clave = extraer_entidades(texto_total)
-  
-  #* Paso extra: Usar OpenAI para la clasificación de archivos (No funciona debido a la API)
-  clasificacion_documental = clasificarcion_openai(texto_total)
+  #* Obtener el JSON como texto (string)
+  clasificacion_documental_json = clasificarcion_openai(texto_total)
 
-  #* 4. Devolver una respuesta JSON con el resultado
+  #* 4. Lógica de búsqueda y almacenamiento en la base de datos
+  expediente_encontrado = None
+  resultado_asignacion = {}
+  
+  conn = conectar_db()
+  
+  #* Se define una variable para el diccionario de clasificacion para evitar el NameError
+  clasificacion_documental_dict = None
+
+  if conn:
+    try:
+      if clasificacion_documental_json:
+        #* Parseamos el JSON a un diccionario para poder acceder a los metadatos
+        clasificacion_documental_dict = json.loads(clasificacion_documental_json)
+        metadatos_documento = clasificacion_documental_dict.get('metadatos', [])
+        
+        expediente_encontrado = buscar_expediente(conn, metadatos_documento)
+      
+      #* 5. Preparar el resultado y guardar si es necesario
+      if expediente_encontrado:
+        resultado_asignacion['estado'] = "Expediente encontrado y asignado"
+        resultado_asignacion['expediente_id'] = expediente_encontrado.get('id')
+          
+      else:
+        resultado_asignacion['estado'] = "Documento enviado a bandeja de pendientes"
+        #* Pasamos el JSON como texto (string) a la función de inserción
+        insertar_documento(conn, asunto, cuerpo_mensaje, clasificacion_documental_json)
+    
+    except json.JSONDecodeError as e:
+      print(f"Error al procesar el JSON de OpenAI: {e}")
+      resultado_asignacion['estado'] = "Error de procesamiento"
+      resultado_asignacion['detalles'] = str(e)
+        
+    finally:
+      if conn:
+        conn.close()
+  else:
+    resultado_asignacion['estado'] = "Error de conexión con la base de datos"
+    
   return jsonify({
     "status": "success",
-    "cuerpo": cuerpo_mensaje,
+    "cuerpo_mensaje": cuerpo_mensaje,
     "adjuntos_detectados": adjuntos_detectados,
     "texto_extraido": texto_total,
-    "informacion_clave": info_clave,
-    "clasifiacion_documental_openai": clasificacion_documental
+    "informacion_clave_spacy": info_clave_spacy,
+    "clasificacion_openai": clasificacion_documental_dict,
+    "resultado_asignacion": resultado_asignacion
   })
-
+  
 if __name__ == '__main__':
   app.run(debug=True)
