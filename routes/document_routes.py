@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from werkzeug.utils import secure_filename
 from get_documents import analizar_archivo_completo
-from openai_classifier import clasificarcion_openai, extraer_paginas_del_contexto, clasificacion_por_paginas
+from openai_classifier import clasificarcion_openai, clasificacion_por_paginas
 from spacy_nlp import extraer_entidades
 from shared.document_context import get_documento_contexto, set_documento_contexto
 import datetime
@@ -54,11 +54,8 @@ def procesar_formulario():
     # Paso extra: Usar OpenAI para la clasificación de archivos
     clasificacion_documental = clasificarcion_openai(texto_total)
     
-    # Extraer páginas separadas del texto
-    paginas_separadas = extraer_paginas_del_contexto(texto_total)
-    
-    # Clasificar cada página individualmente
-    clasificaciones_por_pagina = clasificacion_por_paginas(paginas_separadas)
+    # Clasificar el documento completo por páginas
+    clasificaciones_por_pagina = clasificacion_por_paginas(texto_total)
 
     # 4. Crear el contexto completo para guardar
     contexto_completo = {
@@ -71,7 +68,7 @@ def procesar_formulario():
         "informacion_clave": info_clave,
         "clasificacion_documental_openai": clasificacion_documental,
         "clasificaciones_por_pagina": clasificaciones_por_pagina,
-        "total_paginas": len(paginas_separadas)
+        "total_paginas": 1  # Documento procesado como unidad completa
     }
     
     # 5. Guardar el contexto en un archivo JSON
@@ -86,9 +83,9 @@ def procesar_formulario():
     nuevo_contexto = {
         "texto": texto_total,
         "analisis": analisis_archivos,
-        "paginas": paginas_separadas,
+        "paginas": {"documento_completo": texto_total},
         "clasificaciones_paginas": clasificaciones_por_pagina,
-        "total_paginas": len(paginas_separadas),
+        "total_paginas": 1,  # Documento procesado como unidad completa
         "disponible": True
     }
     set_documento_contexto(nuevo_contexto)
@@ -105,7 +102,7 @@ def procesar_formulario():
         "informacion_clave": info_clave,
         "clasifiacion_documental_openai": clasificacion_documental,
         "clasificaciones_por_pagina": clasificaciones_por_pagina,
-        "total_paginas": len(paginas_separadas)
+        "total_paginas": 1  # Documento procesado como unidad completa
     })
 
 @document_bp.route('/listar_paginas', methods=['GET'])
