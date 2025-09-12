@@ -3,112 +3,112 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Monitor de Correos y Formularios</title>
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
+    <title>Sistema de Gestión de Documentos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/upload-section.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pdf-section.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/chat-section.css') }}" />
   </head>
   <body>
-    <div class="main-container">
+    <div class="container">
       <h1 class="main-title">Sistema SGDEA - Gestión de Documentos</h1>
       
-      <div class="two-column-layout">
-        <!-- Columna Izquierda: Procesamiento y Contextos -->
-        <div class="left-column">
-          <div class="section">
-            <h2>Monitor de Correos</h2>
-            <p>Presiona el botón para buscar nuevos correos en la bandeja principal.</p>
-            <button id="checkEmailBtn">Revisar Correos</button>
+      <!-- SECCIÓN 1: SUBIDA DE DOCUMENTOS -->
+      <div class="upload-compact">
+        <button id="uploadToggle" class="upload-toggle-btn">
+          📄 Subir PDF
+        </button>
+        <input type="file" id="pdfFile" name="pdf_file" accept=".pdf" class="hidden-file-input" required>
+        <div id="uploadMessage" class="upload-message-compact"></div>
+      </div>
+
+      <!-- SECCIÓN 2: LISTA DE DOCUMENTOS -->
+      <section class="section pdf-section">
+        <h2 class="section-title">📋 Documentos Disponibles</h2>
+        <div class="pdf-controls">
+          <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Buscar documentos..." class="search-input">
           </div>
-
-          <div class="section">
-            <h2>Procesar Formulario</h2>
-            <form id="uploadForm">
-              <div class="form-group">
-                <label for="asunto">Asunto:</label>
-                <input type="text" id="asunto" name="asunto" class="form-control" />
-              </div>
-              <div class="form-group">
-                <label for="cuerpo_mensaje">Cuerpo del Mensaje:</label>
-                <textarea
-                  id="cuerpo_mensaje"
-                  name="cuerpo_mensaje"
-                  class="form-control"
-                  rows="4"
-                ></textarea>
-              </div>
-              <div class="form-group">
-                <label for="archivo">Archivo:</label>
-                <input
-                  type="file"
-                  id="archivo"
-                  name="archivo"
-                  class="form-control"
-                  required
-                />
-              </div>
-              <button type="submit">Procesar Formulario</button>
-            </form>
-
-            <div id="responseContainer" class="response-container hidden">
-              <h3>Resultado del Procesamiento:</h3>
-              <pre id="responseJson"></pre>
-            </div>
+          <button id="refreshBtn" class="refresh-btn">🔄 Actualizar</button>
+        </div>
+        <div class="documents-container">
+          <div class="documents-table-wrapper">
+            <table id="documentsTable" class="documents-table">
+              <thead>
+                <tr>
+                  <th>Nombre</th>
+                  <th>Fecha</th>
+                  <th>Estado</th>
+                  <th>Tamaño</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="documentsTableBody">
+                <!-- Los documentos se cargarán aquí dinámicamente -->
+              </tbody>
+            </table>
           </div>
-
-          <div class="section">
-            <h2>Contextos Guardados</h2>
-            <p>Carga un contexto previamente procesado para continuar el chat.</p>
-            
-            <div class="context-controls">
-              <button id="toggle-context-panel" class="context-btn">Ver Contextos</button>
-              <button id="load-context-file" class="context-btn">Cargar JSON</button>
-              <input type="file" id="context-file-input" accept=".json" style="display: none;">
+          
+          <div class="pagination-container">
+            <div class="pagination-info">
+              <span id="paginationInfo">Mostrando 0 de 0 documentos</span>
             </div>
-
-            <div id="current-context-display" class="current-context-display" style="display: none;"></div>
-
-            <div id="context-panel" class="context-panel" style="display: none;">
-              <div class="context-panel-header">
-                <h4>Contextos Disponibles</h4>
-                <button id="refresh-contexts" class="refresh-btn">🔄</button>
-              </div>
-              <div id="context-list" class="context-list">
-                <p>Cargando contextos...</p>
-              </div>
+            <div class="pagination-controls">
+              <button id="prevPage" class="pagination-btn">‹ Anterior</button>
+              <div id="pageNumbers" class="page-numbers"></div>
+              <button id="nextPage" class="pagination-btn">Siguiente ›</button>
+            </div>
+            <div class="page-size-selector">
+              <label for="pageSize">Mostrar:</label>
+              <select id="pageSize" class="page-size-select">
+                <option value="5">5</option>
+                <option value="10" selected>10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+              </select>
+              <span>por página</span>
             </div>
           </div>
         </div>
+      </section>
 
-        <!-- Columna Derecha: Chat -->
-        <div class="right-column">
-          <div class="chat-section">
-            <h2>Chat con el Documento</h2>
-            <div id="chat-status" class="chat-status">
-            </div>
-            
-            <div id="chatContainer" class="chat-container">
-              <div id="chatMessages" class="chat-messages"></div>
-              
-              <div class="chat-input-container">
-                <input 
-                  type="text" 
-                  id="chatInput" 
-                  placeholder="Escribe tu pregunta sobre el documento..."
-                  class="chat-input"
-                  disabled
-                />
-                <button id="sendChatBtn" class="chat-send-btn" disabled>Enviar</button>
-              </div>
-            </div>
+      <!-- SECCIÓN 3: CHAT -->
+      <section class="section chat-section">
+        <h2 class="section-title">💬 Chat con Documento</h2>
+        <div id="chat-status" class="chat-status">
+          <p>Selecciona un documento de la tabla para comenzar a chatear</p>
+        </div>
+        <div class="chat-messages-container">
+          <div id="chatMessages" class="chat-messages"></div>
+          <div class="chat-input-container">
+            <textarea id="chatInput" class="chat-input" placeholder="Selecciona un documento para hacer preguntas..." disabled rows="2"></textarea>
+            <button id="sendChatBtn" class="send-btn" disabled>Enviar</button>
           </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Modal de confirmación -->
+    <div id="confirmModal" class="modal-overlay" style="display: none;">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>⚠️ Confirmar eliminación</h3>
+        </div>
+        <div class="modal-body">
+          <p id="confirmMessage">¿Estás seguro de que quieres eliminar este documento?</p>
+          <p class="warning-text">Esta acción no se puede deshacer.</p>
+        </div>
+        <div class="modal-footer">
+          <button id="confirmCancel" class="btn-cancel">Cancelar</button>
+          <button id="confirmDelete" class="btn-delete-confirm">Eliminar</button>
         </div>
       </div>
-      
-      <div id="messages-container" class="messages-container"></div>
     </div>
+
+    <!-- Contenedor de mensajes -->
+    <div id="messageContainer" class="message-container"></div>
+
+    <script type="module" src="{{ url_for('static', filename='js/pdfHandler.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/contextHandler.js') }}"></script>
   </body>
 </html>

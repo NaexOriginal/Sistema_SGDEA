@@ -1,198 +1,174 @@
-// chatHandler.js - Maneja la funcionalidad del chat con el documento
+// ===== CHAT HANDLER - SISTEMA SGDEA =====
 
 class ChatHandler {
     constructor() {
-        this.chatInput = null;
-        this.sendButton = null;
-        this.chatMessages = null;
-        this.chatSection = null;
-        this.isInitialized = false;
+        this.currentDocumentId = null;
     }
 
     init() {
-        console.log('Inicializando ChatHandler...');
-        
-        // Obtener elementos del DOM
-        this.chatInput = document.getElementById('chatInput');
-        this.sendButton = document.getElementById('sendChatBtn');
-        this.chatMessages = document.getElementById('chatMessages');
-        this.chatContainer = document.getElementById('chatContainer');
+        this.bindEvents();
+    }
 
-        if (!this.chatInput || !this.sendButton || !this.chatMessages || !this.chatContainer) {
-            console.error('No se pudieron encontrar todos los elementos del chat');
-            console.log('Elementos encontrados:', {
-                chatInput: !!this.chatInput,
-                sendButton: !!this.sendButton,
-                chatMessages: !!this.chatMessages,
-                chatContainer: !!this.chatContainer
+    bindEvents() {
+        // Botón enviar
+        const sendButton = document.getElementById('sendChatBtn');
+        if (sendButton) {
+            sendButton.addEventListener('click', () => this.sendMessage());
+        }
+
+        // Enter en input
+        const chatInput = document.getElementById('chatInput');
+        if (chatInput) {
+            chatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.sendMessage();
+                }
             });
+        }
+    }
+
+    enableChat(documentId) {
+        this.currentDocumentId = documentId;
+        
+        const chatInput = document.getElementById('chatInput');
+        const sendButton = document.getElementById('sendChatBtn');
+        const chatStatus = document.getElementById('chat-status');
+        
+        if (chatInput) {
+            chatInput.disabled = false;
+            chatInput.placeholder = 'Escribe tu pregunta sobre el documento...';
+        }
+        
+        if (sendButton) {
+            sendButton.disabled = false;
+        }
+        
+        if (chatStatus) {
+            chatStatus.innerHTML = '<p>Documento seleccionado. ¡Puedes hacer preguntas!</p>';
+        }
+        
+        this.clearMessages();
+    }
+
+    disableChat() {
+        this.currentDocumentId = null;
+        
+        const chatInput = document.getElementById('chatInput');
+        const sendButton = document.getElementById('sendChatBtn');
+        const chatStatus = document.getElementById('chat-status');
+        
+        if (chatInput) {
+            chatInput.disabled = true;
+            chatInput.placeholder = 'Selecciona un documento para hacer preguntas...';
+            chatInput.value = '';
+        }
+        
+        if (sendButton) {
+            sendButton.disabled = true;
+        }
+        
+        if (chatStatus) {
+            chatStatus.innerHTML = '<p>Selecciona un documento de la tabla para comenzar a chatear</p>';
+        }
+        
+        this.clearMessages();
+    }
+
+    async sendMessage() {
+        const chatInput = document.getElementById('chatInput');
+        const message = chatInput.value.trim();
+        
+        if (!message) {
+            alert('Escribe una pregunta');
             return;
         }
-
-        this.setupEventListeners();
-        this.isInitialized = true;
-        console.log('ChatHandler inicializado correctamente');
-    }
-
-    setupEventListeners() {
-        // Evento para el botón de enviar
-        this.sendButton.addEventListener('click', () => {
-            this.enviarPregunta();
-        });
-
-        // Evento para presionar Enter en el input
-        this.chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                this.enviarPregunta();
-            }
-        });
-    }
-
-    mostrarChat() {
-        if (this.chatContainer) {
-            this.chatContainer.style.display = 'block';
-        }
-        // Ocultar el mensaje de estado
-        const chatStatus = document.getElementById('chat-status');
-        if (chatStatus) {
-            chatStatus.style.display = 'none';
-        }
-    }
-
-    ocultarChat() {
-        if (this.chatContainer) {
-            this.chatContainer.style.display = 'none';
-        }
-        // Mostrar el mensaje de estado
-        const chatStatus = document.getElementById('chat-status');
-        if (chatStatus) {
-            chatStatus.style.display = 'block';
-        }
-    }
-
-    async enviarPregunta() {
-        const pregunta = this.chatInput.value.trim();
         
-        if (!pregunta) {
-            alert('Por favor, escribe una pregunta.');
+        if (!this.currentDocumentId) {
+            alert('Selecciona un documento primero');
             return;
         }
-
-        // Mostrar la pregunta del usuario
-        this.agregarMensajeUsuario(pregunta);
         
-        // Limpiar el input y deshabilitar el botón
-        this.chatInput.value = '';
-        this.sendButton.disabled = true;
-        this.sendButton.textContent = 'Enviando...';
-
+        // Mostrar mensaje del usuario
+        this.addMessage(message, 'user');
+        
+        // Limpiar input y deshabilitar
+        chatInput.value = '';
+        this.setLoading(true);
+        
         try {
-            // Enviar la pregunta al servidor
-            const response = await fetch('/chat', {
+            const response = await fetch('/chat/message', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ pregunta: pregunta })
+                body: JSON.stringify({
+                    message: message,
+                    document_id: this.currentDocumentId
+                })
             });
-
+            
             const data = await response.json();
-
-            if (data.status === 'success') {
-                this.agregarMensajeBot(data.respuesta);
+            
+            if (response.ok && data.response) {
+                this.addMessage(data.response, 'assistant');
             } else {
-                this.agregarMensajeError(data.message || 'Error al procesar la pregunta');
+                this.addMessage('Error: ' + (data.error || 'No se pudo procesar la pregunta'), 'assistant');
             }
-
         } catch (error) {
-            console.error('Error al enviar pregunta:', error);
-            this.agregarMensajeError('Error de conexión. Por favor, intenta de nuevo.');
+            this.addMessage('Error de conexión', 'assistant');
         } finally {
-            // Restaurar el botón
-            this.sendButton.disabled = false;
-            this.sendButton.textContent = 'Enviar';
-            this.chatInput.focus();
+            this.setLoading(false);
         }
     }
 
-    agregarMensajeUsuario(mensaje) {
+    addMessage(text, sender) {
+        const chatMessages = document.getElementById('chatMessages');
+        if (!chatMessages) return;
+        
         const messageDiv = document.createElement('div');
-        messageDiv.className = 'chat-message user-message';
-        messageDiv.innerHTML = `
-            <div class="message-content">
-                <strong>Tú:</strong> ${this.escapeHtml(mensaje)}
-            </div>
-            <div class="message-time">${this.obtenerHoraActual()}</div>
-        `;
-        this.chatMessages.appendChild(messageDiv);
+        messageDiv.className = `message ${sender}`;
+        messageDiv.textContent = text;
+        
+        chatMessages.appendChild(messageDiv);
+        
+        // Scroll suave al último mensaje
         this.scrollToBottom();
     }
-
-    agregarMensajeBot(mensaje) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'chat-message bot-message';
-        messageDiv.innerHTML = `
-            <div class="message-content">
-                <strong>Asistente:</strong> ${this.escapeHtml(mensaje)}
-            </div>
-            <div class="message-time">${this.obtenerHoraActual()}</div>
-        `;
-        this.chatMessages.appendChild(messageDiv);
-        this.scrollToBottom();
-    }
-
-    agregarMensajeSistema(mensaje) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'chat-message system-message';
-        messageDiv.innerHTML = `
-            <div class="message-content">
-                <em>${this.escapeHtml(mensaje)}</em>
-            </div>
-            <div class="message-time">${this.obtenerHoraActual()}</div>
-        `;
-        this.chatMessages.appendChild(messageDiv);
-        this.scrollToBottom();
-    }
-
-    agregarMensajeError(mensaje) {
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'chat-message error-message';
-        messageDiv.innerHTML = `
-            <div class="message-content">
-                <strong>Error:</strong> ${this.escapeHtml(mensaje)}
-            </div>
-            <div class="message-time">${this.obtenerHoraActual()}</div>
-        `;
-        this.chatMessages.appendChild(messageDiv);
-        this.scrollToBottom();
-    }
-
-    limpiarChat() {
-        if (this.chatMessages) {
-            this.chatMessages.innerHTML = '';
-        }
-    }
-
+    
     scrollToBottom() {
-        if (this.chatMessages) {
-            this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
-        }
-    }
-
-    obtenerHoraActual() {
-        const now = new Date();
-        return now.toLocaleTimeString('es-ES', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
+        const chatMessages = document.getElementById('chatMessages');
+        if (!chatMessages) return;
+        
+        // Usar requestAnimationFrame para asegurar que el DOM se haya actualizado
+        requestAnimationFrame(() => {
+            chatMessages.scrollTo({
+                top: chatMessages.scrollHeight,
+                behavior: 'smooth'
+            });
         });
     }
 
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
+    clearMessages() {
+        const chatMessages = document.getElementById('chatMessages');
+        if (chatMessages) {
+            chatMessages.innerHTML = '';
+        }
+    }
+
+    setLoading(loading) {
+        const sendButton = document.getElementById('sendChatBtn');
+        const chatInput = document.getElementById('chatInput');
+        
+        if (sendButton) {
+            sendButton.disabled = loading;
+            sendButton.textContent = loading ? 'Enviando...' : 'Enviar';
+        }
+        
+        if (chatInput) {
+            chatInput.disabled = loading;
+        }
     }
 }
 
-// Exportar la clase para uso en otros módulos
+// Exportar para uso global
 window.ChatHandler = ChatHandler;
